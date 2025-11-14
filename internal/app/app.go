@@ -20,18 +20,12 @@ type App struct {
 }
 
 func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
-	logger.Info("Start app assembly")
-
 	// Если не можем подключиться к бд достаточно быстро, значит проблемы
 	shortCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	db, err := pgxpool.New(shortCtx, cfg.DatabaseURL)
 	if err != nil {
-		logger.Error("connect to the db",
-			slog.String("error", err.Error()),
-		)
-
 		return nil, fmt.Errorf("db init: %w", err)
 	}
 
