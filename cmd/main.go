@@ -19,7 +19,13 @@ func main() {
 
 	cfg := config.Load()
 
-	logger := logger.Setup(cfg)
+	logger, err := logger.Setup(cfg)
+	if err != nil {
+		slog.Error("logger setup",
+			slog.String("error", err.Error()),
+		)
+		os.Exit(1)
+	}
 
 	app, err := app.New(cfg, logger)
 	if err != nil {
@@ -34,7 +40,9 @@ func main() {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		app.Logger.Info("starting server", "addr", cfg.ServerPort)
+		app.Logger.Info("starting server",
+			slog.String("addr", cfg.ServerAddr),
+		)
 		if err := app.Run(); err != nil {
 			serverErr <- err
 		}
@@ -42,11 +50,15 @@ func main() {
 
 	select {
 	case err := <-serverErr:
-		app.Logger.Error("server error", "error", err)
+		app.Logger.Error("server error",
+			slog.String("error", err.Error()),
+		)
 		os.Exit(1)
 
 	case sig := <-sigChan:
-		app.Logger.Info("shutdown signal received", "signal", sig.String())
+		app.Logger.Info("shutdown signal received",
+			slog.String("signal", sig.String()),
+		)
 	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -55,7 +67,9 @@ func main() {
 	app.Logger.Info("shutting down server gracefully")
 
 	if err := app.Shutdown(shutdownCtx); err != nil {
-		app.Logger.Error("forced shutdown", "error", err)
+		app.Logger.Error("forced shutdown",
+			slog.String("error", err.Error()),
+		)
 		os.Exit(1)
 	}
 

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -19,9 +20,7 @@ type App struct {
 }
 
 func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
-	logger.Info(
-		"Start app assembly",
-	)
+	logger.Info("Start app assembly")
 
 	// Если не можем подключиться к бд достаточно быстро, значит проблемы
 	shortCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -29,10 +28,11 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
 
 	db, err := pgxpool.New(shortCtx, cfg.DatabaseURL)
 	if err != nil {
-		logger.Error(
-			"connect to the db",
+		logger.Error("connect to the db",
 			slog.String("error", err.Error()),
 		)
+
+		return nil, fmt.Errorf("db init: %w", err)
 	}
 
 	return &App{
@@ -51,7 +51,7 @@ func (app *App) Shutdown(ctx context.Context) error {
 	app.Logger.InfoContext(ctx, "starting graceful shutdown")
 
 	if err := app.Server.Shutdown(ctx); err != nil {
-		app.Logger.ErrorContext(ctx, "http server shutdown error",
+		app.Logger.ErrorContext(ctx, "http server shutdown",
 			slog.String("error", err.Error()),
 		)
 	} else {
