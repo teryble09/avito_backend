@@ -1,7 +1,8 @@
-package cmd
+package main
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -15,7 +16,9 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	if err := godotenv.Load(); err == nil {
+		log.Print("loaded env file manually")
+	}
 
 	cfg := config.Load()
 
@@ -39,11 +42,14 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	serverErr := make(chan error, 1)
+
 	go func() {
 		app.Logger.Info("starting server",
 			slog.String("addr", cfg.ServerAddr),
 		)
-		if err := app.Run(); err != nil {
+
+		err := app.Run()
+		if err != nil {
 			serverErr <- err
 		}
 	}()
@@ -70,8 +76,7 @@ func main() {
 		app.Logger.Error("forced shutdown",
 			slog.String("error", err.Error()),
 		)
-		os.Exit(1)
+	} else {
+		app.Logger.Info("server stopped successfully")
 	}
-
-	app.Logger.Info("server stopped successfully")
 }

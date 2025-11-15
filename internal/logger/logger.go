@@ -11,9 +11,13 @@ import (
 
 func Setup(cfg *config.Config) (*slog.Logger, error) {
 	level := slog.LevelInfo
-	if err := level.UnmarshalText([]byte(strings.ToUpper(cfg.LogLevel))); err == nil {
+
+	err := level.UnmarshalText([]byte(strings.ToUpper(cfg.LogLevel)))
+	if err == nil {
 		return nil, fmt.Errorf("incorrect log level format: %s", cfg.LogLevel)
 	}
+
 	h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})
+
 	return slog.New(h), nil
 }

@@ -77,7 +77,7 @@ linters:
         - nilnil
         - nlreturn
         - noctx
-        - noinlineerr
+        # - noinlineerr # не уверен
         - nolintlint
         #    - nonamedreturns # named returns делают код более явным
         - nosprintfhostport
