@@ -1,0 +1,13 @@
+-- +goose Up
+CREATE TABLE users (
+    user_id VARCHAR(50) PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    team_name VARCHAR(50) NOT NULL REFERENCES teams(team_name),
+    is_active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE INDEX idx_users_team_name ON users(team_name);
+CREATE INDEX idx_users_is_active ON users(is_active);
+
+-- +goose Down
+DROP TABLE IF EXISTS users;

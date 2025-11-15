@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/teryble09/avito_backend/tree/dev/internal/app"
-	"github.com/teryble09/avito_backend/tree/dev/internal/config"
-	"github.com/teryble09/avito_backend/tree/dev/internal/logger"
+	"github.com/teryble09/avito_backend/internal/app"
+	"github.com/teryble09/avito_backend/internal/config"
+	"github.com/teryble09/avito_backend/internal/logger"
 )
 
 func main() {
@@ -32,12 +32,13 @@ func main() {
 
 	app, err := app.New(cfg, logger)
 	if err != nil {
-		logger.Error("Fail to assembly app",
+		logger.Error("create app",
 			slog.String("error", err.Error()),
 		)
 		os.Exit(1)
 	}
 
+	// handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
