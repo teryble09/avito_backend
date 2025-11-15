@@ -2,10 +2,13 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/teryble09/avito_backend/internal/domain"
 	"github.com/teryble09/avito_backend/internal/entity"
@@ -33,10 +36,14 @@ func (r *TeamRepo) SaveNewTeam(ctx context.Context, tx pgx.Tx, team *domain.Team
 		return fmt.Errorf("query build: %w", err)
 	}
 
-	ct, err := tx.Exec(ctx, query, args...)
+	_, err = tx.Exec(ctx, query, args...)
 	if err != nil {
-		if ct.RowsAffected() == 0 {
-			return fmt.Errorf("query exec: %w", domain.ErrTeamAlreadyExist)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case pgerrcode.UniqueViolation:
+				return domain.ErrTeamAlreadyExist
+			}
 		}
 
 		return fmt.Errorf("query exec: %w", err)
