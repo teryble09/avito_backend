@@ -23,11 +23,7 @@ type App struct {
 }
 
 func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
-	// Если не можем подключиться к бд достаточно быстро, значит проблемы
-	shortCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	db, err := pgxpool.New(shortCtx, cfg.DatabaseURL)
+	db, err := pgxpool.New(context.Background(), cfg.DatabaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("db init: %w", err)
 	}
@@ -37,25 +33,41 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
     if err := goose.SetDialect("postgres"); err != nil {
 		return nil, fmt.Errorf("goose set dialect: %w", err)
     }
-	
+
+	// goose требует стандартный интерфейс
     dbconn := stdlib.OpenDBFromPool(db)
     if err := goose.Up(dbconn, "."); err != nil {
 		return nil, fmt.Errorf("run migrations: %w", err)
     }
     
     if err := dbconn.Close(); err != nil {
-		return nil, fmt.Errof("close connection after migrations: %w", err)
+		return nil, fmt.Errorf("close connection after migrations: %w", err)
     }
+
+	handler, err := assemblyLayers(cfg, pgxpool, logger)
+	if err != nil {
+		return nil, fmt.Errorf("assembly layers: %w", err)
+	}
+
+	server := &http.Server{
+		Handler: handler,
+
+		Addr: cfg.ServerAddr,
+		// опционально можем добавить другие параметры в конфиг и подставить тут
+	}
 
 	return &App{
 		Logger: logger,
 		DB:     db,
 		Config: cfg,
-		// Server: ,
+		Server: server,
 	}, nil
 }
 
 func (app *App) Run() error {
+	if err := app.Server.ListenAndServe(); err != nil {
+		return fmt.Errorf("run server: %w", err)
+	}
 	return nil
 }
 
