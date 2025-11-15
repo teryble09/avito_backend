@@ -14,17 +14,17 @@ type TeamRepo interface {
 	GetTeamByName(ctx context.Context, teamName string) (*domain.Team, error)
 }
 
-type UserRepo interface {
+type UserBatchUpserter interface {
 	UpsertUsersBatch(ctx context.Context, tx pgx.Tx, team *domain.Team) error
 }
 
 type TeamService struct {
 	db       *pgxpool.Pool
 	teamRepo TeamRepo
-	userRepo UserRepo
+	userRepo UserBatchUpserter
 }
 
-func NewTeamService(db *pgxpool.Pool, teamRepo TeamRepo, userRepo UserRepo) *TeamService {
+func NewTeamService(db *pgxpool.Pool, teamRepo TeamRepo, userRepo UserBatchUpserter) *TeamService {
 	return &TeamService{
 		db:       db,
 		teamRepo: teamRepo,

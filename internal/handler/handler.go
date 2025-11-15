@@ -12,11 +12,17 @@ type OgenHandler struct {
 	logger *slog.Logger
 
 	teamService TeamService
+	userService UserService
 }
 
-func NewOgenHandler(logger *slog.Logger, teamService TeamService) *OgenHandler {
+func NewOgenHandler(
+	logger *slog.Logger,
+	teamService TeamService,
+	userService UserService,
+) *OgenHandler {
 	return &OgenHandler{
 		logger:      logger,
 		teamService: teamService,
+		userService: userService,
 	}
 }

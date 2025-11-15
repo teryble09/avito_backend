@@ -49,6 +49,10 @@ func (oh *OgenHandler) TeamGetGet(ctx context.Context, params api.TeamGetGetPara
 		return ErrorToAPI(err), nil
 	}
 
+	oh.logger.InfoContext(ctx, "get team",
+		slog.String("team_name", params.TeamName),
+	)
+
 	apiTeam := TeamToAPI(team)
 
 	return &apiTeam, nil

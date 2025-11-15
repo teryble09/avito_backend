@@ -58,6 +58,14 @@ func ErrorToAPI(err error) *api.ErrorResponse {
 			},
 		}
 
+	case errors.Is(err, domain.ErrUserNotFound):
+		return &api.ErrorResponse{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOTFOUND,
+				Message: "user not found",
+			},
+		}
+
 	default:
 		return &api.ErrorResponse{
 			Error: api.ErrorResponseError{
@@ -65,5 +73,23 @@ func ErrorToAPI(err error) *api.ErrorResponse {
 				Message: "unknown error",
 			},
 		}
+	}
+}
+
+func UserToAPI(u *domain.User) api.User {
+	return api.User{
+		UserID:   u.ID,
+		Username: u.Username,
+		TeamName: u.TeamName,
+		IsActive: u.IsActive,
+	}
+}
+
+func UserFromAPI(u *api.User) *domain.User {
+	return &domain.User{
+		ID:       u.UserID,
+		Username: u.Username,
+		TeamName: u.TeamName,
+		IsActive: u.IsActive,
 	}
 }
