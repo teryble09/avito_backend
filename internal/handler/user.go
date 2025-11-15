@@ -23,6 +23,7 @@ func (oh *OgenHandler) UsersSetIsActivePost(
 			slog.Bool("is_active", req.IsActive),
 			slog.String("error", err.Error()),
 		)
+
 		return ErrorToAPI(err), nil
 	}
 
@@ -31,6 +32,7 @@ func (oh *OgenHandler) UsersSetIsActivePost(
 	)
 
 	userApi := UserToAPI(user)
+
 	return &api.UsersSetIsActivePostOK{
 		User: api.NewOptUser(userApi),
 	}, nil

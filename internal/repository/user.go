@@ -81,9 +81,11 @@ func (r *UserRepo) SetIsActive(ctx context.Context, userID string, isActive bool
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrUserNotFound
 		}
+
 		return nil, fmt.Errorf("scan user: %w", err)
 	}
 
 	userDomain := userEntity.ToDomain()
+
 	return userDomain, nil
 }

@@ -9,13 +9,11 @@ import (
 )
 
 func Setup(cfg *config.Config) (*slog.Logger, error) {
-	level := slog.LevelInfo
+	var level slog.Level
 
 	switch strings.ToLower(cfg.LogLevel) {
 	case "debug":
 		level = slog.LevelDebug
-	case "info":
-		level = slog.LevelInfo
 	case "warn":
 		level = slog.LevelWarn
 	case "error":

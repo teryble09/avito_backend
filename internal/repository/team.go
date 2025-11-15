@@ -40,8 +40,7 @@ func (r *TeamRepo) SaveNewTeam(ctx context.Context, tx pgx.Tx, team *domain.Team
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			switch pgErr.Code {
-			case pgerrcode.UniqueViolation:
+			if pgErr.Code == pgerrcode.UniqueViolation {
 				return domain.ErrTeamAlreadyExist
 			}
 		}
@@ -55,6 +54,7 @@ func (r *TeamRepo) SaveNewTeam(ctx context.Context, tx pgx.Tx, team *domain.Team
 func (r *TeamRepo) GetTeamByName(ctx context.Context, teamName string) (*domain.Team, error) {
 	// Проверяем существование команды
 	var exists bool
+
 	err := r.db.QueryRow(ctx,
 		`SELECT EXISTS(SELECT 1 FROM teams WHERE team_name = $1)`,
 		teamName,
