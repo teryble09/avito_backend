@@ -40,7 +40,7 @@ func TeamToAPI(team *domain.Team) api.Team {
 	}
 }
 
-func ErrorToAPI(err error) api.TeamAddPostRes {
+func ErrorToAPI(err error) *api.ErrorResponse {
 	switch {
 	case errors.Is(err, domain.ErrTeamAlreadyExist):
 		return &api.ErrorResponse{
@@ -49,6 +49,15 @@ func ErrorToAPI(err error) api.TeamAddPostRes {
 				Message: "team already exists",
 			},
 		}
+
+	case errors.Is(err, domain.ErrTeamNotFound):
+		return &api.ErrorResponse{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOTFOUND,
+				Message: "team not found",
+			},
+		}
+
 	default:
 		return &api.ErrorResponse{
 			Error: api.ErrorResponseError{

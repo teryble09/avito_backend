@@ -11,6 +11,7 @@ import (
 
 type TeamRepo interface {
 	SaveNewTeam(ctx context.Context, tx pgx.Tx, team *domain.Team) error
+	GetTeamByName(ctx context.Context, teamName string) (*domain.Team, error)
 }
 
 type UserRepo interface {
@@ -51,6 +52,15 @@ func (s *TeamService) CreateTeam(ctx context.Context, team *domain.Team) (*domai
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit transaction: %w", err)
+	}
+
+	return team, nil
+}
+
+func (s *TeamService) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
+	team, err := s.teamRepo.GetTeamByName(ctx, teamName)
+	if err != nil {
+		return nil, fmt.Errorf("get team: %w", err)
 	}
 
 	return team, nil

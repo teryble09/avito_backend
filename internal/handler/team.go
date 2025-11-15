@@ -10,6 +10,7 @@ import (
 
 type TeamService interface {
 	CreateTeam(ctx context.Context, team *domain.Team) (*domain.Team, error)
+	GetTeam(ctx context.Context, teamName string) (*domain.Team, error)
 }
 
 func (oh *OgenHandler) TeamAddPost(ctx context.Context, req *api.Team) (api.TeamAddPostRes, error) {
@@ -35,4 +36,20 @@ func (oh *OgenHandler) TeamAddPost(ctx context.Context, req *api.Team) (api.Team
 	return &api.TeamAddPostCreated{
 		Team: api.NewOptTeam(apiTeam),
 	}, nil
+}
+
+func (oh *OgenHandler) TeamGetGet(ctx context.Context, params api.TeamGetGetParams) (api.TeamGetGetRes, error) {
+	team, err := oh.teamService.GetTeam(ctx, params.TeamName)
+	if err != nil {
+		oh.logger.ErrorContext(ctx, "failed to get team",
+			slog.String("team_name", params.TeamName),
+			slog.String("error", err.Error()),
+		)
+
+		return ErrorToAPI(err), nil
+	}
+
+	apiTeam := TeamToAPI(team)
+
+	return &apiTeam, nil
 }

@@ -51,3 +51,46 @@ func (r *TeamRepo) SaveNewTeam(ctx context.Context, tx pgx.Tx, team *domain.Team
 
 	return nil
 }
+
+func (r *TeamRepo) GetTeamByName(ctx context.Context, teamName string) (*domain.Team, error) {
+	// Проверяем существование команды
+	var exists bool
+	err := r.db.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM teams WHERE team_name = $1)`,
+		teamName,
+	).Scan(&exists)
+	if err != nil {
+		return nil, fmt.Errorf("check team exists: %w", err)
+	}
+
+	if !exists {
+		return nil, domain.ErrTeamNotFound
+	}
+
+	query := `
+		SELECT user_id, username, team_name, is_active 
+		FROM users 
+		WHERE team_name = $1
+	`
+
+	rows, err := r.db.Query(ctx, query, teamName)
+	if err != nil {
+		return nil, fmt.Errorf("select query: %w", err)
+	}
+	defer rows.Close()
+
+	userEntities, err := pgx.CollectRows(rows, pgx.RowToStructByName[entity.User])
+	if err != nil {
+		return nil, fmt.Errorf("collect users: %w", err)
+	}
+
+	members := make([]*domain.User, 0, len(userEntities))
+	for _, ue := range userEntities {
+		members = append(members, ue.ToDomain())
+	}
+
+	return &domain.Team{
+		Name:    teamName,
+		Members: members,
+	}, nil
+}

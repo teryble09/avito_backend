@@ -14,7 +14,10 @@ func NewTeam(name string, members []*User) *Team {
 	}
 }
 
-var ErrTeamAlreadyExist = errors.New("team already exists")
+var (
+	ErrTeamAlreadyExist = errors.New("team already exists")
+	ErrTeamNotFound     = errors.New("team not found")
+)
 
 // ActiveMembers возвращает активных участников команды.
 func (t *Team) ActiveMembers() []*User {
