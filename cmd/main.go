@@ -1,0 +1,83 @@
+package main
+
+import (
+	"context"
+	"log"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/teryble09/avito_backend/internal/app"
+	"github.com/teryble09/avito_backend/internal/config"
+	"github.com/teryble09/avito_backend/internal/logger"
+)
+
+func main() {
+	if err := godotenv.Load(); err == nil {
+		log.Print("loaded env file manually")
+	}
+
+	cfg := config.Load()
+
+	logger, err := logger.Setup(cfg)
+	if err != nil {
+		slog.Error("logger setup",
+			slog.String("error", err.Error()),
+		)
+		os.Exit(1)
+	}
+
+	app, err := app.New(cfg, logger)
+	if err != nil {
+		logger.Error("create app",
+			slog.String("error", err.Error()),
+		)
+		os.Exit(1)
+	}
+
+	// handle graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	serverErr := make(chan error, 1)
+
+	go func() {
+		app.Logger.Info("starting server",
+			slog.String("addr", cfg.ServerAddr),
+		)
+
+		err := app.Run()
+		if err != nil {
+			serverErr <- err
+		}
+	}()
+
+	select {
+	case err := <-serverErr:
+		app.Logger.Error("server error",
+			slog.String("error", err.Error()),
+		)
+		os.Exit(1)
+
+	case sig := <-sigChan:
+		app.Logger.Info("shutdown signal received",
+			slog.String("signal", sig.String()),
+		)
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	app.Logger.Info("shutting down server gracefully")
+
+	if err := app.Shutdown(shutdownCtx); err != nil {
+		app.Logger.Error("forced shutdown",
+			slog.String("error", err.Error()),
+		)
+	} else {
+		app.Logger.Info("server stopped successfully")
+	}
+}
