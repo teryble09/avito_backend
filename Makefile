@@ -7,3 +7,8 @@ lint-fix:
 	@echo "running golangci-lint"
 	golangci-lint run --fix ./...
 	@echo "lint complete"
+
+# требует env файл и запущенный локально postgre
+.PHONY: run
+run:
+	go run cmd/main.go 
