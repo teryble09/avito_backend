@@ -12,10 +12,12 @@ import (
 type PullRequestRepo interface {
 	CreatePR(ctx context.Context, tx pgx.Tx, pr *domain.PullRequest) error
 	GetPRsByReviewer(ctx context.Context, reviewerID string) ([]*domain.PullRequestShort, error)
+	MergePR(ctx context.Context, prID string) (*domain.PullRequest, error)
 }
 
 type PRReviewerRepo interface {
 	AssignReviewers(ctx context.Context, tx pgx.Tx, prID string, reviewerIDs []string) error
+	GetReviewers(ctx context.Context, prID string) ([]string, error)
 }
 
 type UserRepoForPR interface {
@@ -84,18 +86,22 @@ func (s *PullRequestService) CreatePullRequest(
 		return nil, fmt.Errorf("create pr: %w", err)
 	}
 
-	if len(selectedReviewers) > 0 {
-		err = s.reviewerRepo.AssignReviewers(ctx, tx, pr.PullRequestID, selectedReviewersIds)
-		if err != nil {
-			return nil, fmt.Errorf("assign reviewers: %w", err)
-		}
-	} else {
-		// Тут получается, что человек работает solo,
-		// если ему доверяют, то надо merdge
+	err = s.reviewerRepo.AssignReviewers(ctx, tx, pr.PullRequestID, selectedReviewersIds)
+	if err != nil {
+		return nil, fmt.Errorf("assign reviewers: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit: %w", err)
+	}
+
+	if len(selectedReviewers) == 0 {
+		// Тут получается, что человек работает solo,
+		// если ему доверяют, то надо merdge
+		_, err = s.prRepo.MergePR(ctx, pr.PullRequestID)
+		if err != nil {
+			return nil, fmt.Errorf("can not merge pr: %w", err)
+		}
 	}
 
 	return pr, nil
@@ -108,4 +114,20 @@ func (s *PullRequestService) GetReviewerPRs(ctx context.Context, userID string) 
 	}
 
 	return prs, nil
+}
+
+func (s *PullRequestService) MergePullRequest(ctx context.Context, prID string) (*domain.PullRequest, error) {
+	pr, err := s.prRepo.MergePR(ctx, prID)
+	if err != nil {
+		return nil, fmt.Errorf("merge pr: %w", err)
+	}
+
+	reviewers, err := s.reviewerRepo.GetReviewers(ctx, prID)
+	if err != nil {
+		return nil, fmt.Errorf("get reviewers: %w", err)
+	}
+
+	pr.AssignedReviewers = reviewers
+
+	return pr, nil
 }

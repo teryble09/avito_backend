@@ -51,3 +51,38 @@ func (r *PRReviewerRepo) AssignReviewers(ctx context.Context, tx pgx.Tx, prID st
 
 	return nil
 }
+
+func (r *PRReviewerRepo) GetReviewers(ctx context.Context, prID string) ([]string, error) {
+	query, args, err := squirrel.Select("reviewer_id").
+		PlaceholderFormat(squirrel.Dollar).
+		From("pr_reviewers").
+		Where(squirrel.Eq{"pull_request_id": prID}).
+		OrderBy("assigned_at").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build query: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+	defer rows.Close()
+
+	reviewers := make([]string, 0)
+
+	for rows.Next() {
+		var reviewerID string
+		if err := rows.Scan(&reviewerID); err != nil {
+			return nil, fmt.Errorf("scan: %w", err)
+		}
+
+		reviewers = append(reviewers, reviewerID)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return reviewers, nil
+}

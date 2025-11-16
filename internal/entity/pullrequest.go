@@ -1,12 +1,17 @@
 package entity
 
-import "github.com/teryble09/avito_backend/internal/domain"
+import (
+	"time"
+
+	"github.com/teryble09/avito_backend/internal/domain"
+)
 
 type PullRequest struct {
-	PullRequestID   string `db:"pull_request_id"`
-	PullRequestName string `db:"pull_request_name"`
-	AuthorID        string `db:"author_id"`
-	Status          string `db:"status"`
+	PullRequestID   string     `db:"pull_request_id"`
+	PullRequestName string     `db:"pull_request_name"`
+	AuthorID        string     `db:"author_id"`
+	Status          string     `db:"status"`
+	MergedAt        *time.Time `db:"merged_at"` // nullable
 }
 
 func (e *PullRequest) ToDomain() *domain.PullRequest {
@@ -15,6 +20,7 @@ func (e *PullRequest) ToDomain() *domain.PullRequest {
 		PullRequestName: e.PullRequestName,
 		AuthorID:        e.AuthorID,
 		Status:          domain.PullRequestStatus(e.Status),
+		MergedAt:        e.MergedAt,
 	}
 }
 

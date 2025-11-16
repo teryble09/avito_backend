@@ -85,3 +85,33 @@ func (r *PullRequestRepo) GetPRsByReviewer(ctx context.Context, reviewerID strin
 
 	return prs, nil
 }
+
+func (r *PullRequestRepo) MergePR(ctx context.Context, prID string) (*domain.PullRequest, error) {
+	updateQuery, updateArgs, err := squirrel.Update("pull_requests").
+		PlaceholderFormat(squirrel.Dollar).
+		Set("status", "MERGED").
+		Set("merged_at", squirrel.Expr("COALESCE(merged_at, NOW())")).
+		Where(squirrel.Eq{"pull_request_id": prID}).
+		Suffix("RETURNING pull_request_id, pull_request_name, author_id, status, merged_at").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build update query: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, updateQuery, updateArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("exec update: %w", err)
+	}
+	defer rows.Close()
+
+	prEntity, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[entity.PullRequest])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrPrNotFound
+		}
+
+		return nil, fmt.Errorf("scan pr: %w", err)
+	}
+
+	return prEntity.ToDomain(), nil
+}

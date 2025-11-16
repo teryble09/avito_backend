@@ -83,6 +83,14 @@ func ErrorToAPI(err error) (*api.ErrorResponse, error) {
 			},
 		}, nil
 
+	case errors.Is(err, domain.ErrPrNotFound):
+		return &api.ErrorResponse{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOTFOUND,
+				Message: "PR not found",
+			},
+		}, nil
+
 	default:
 		return nil, ErrInternal
 	}
@@ -132,13 +140,18 @@ func UserFromAPI(u *api.User) *domain.User {
 }
 
 func PullRequestToAPI(pr *domain.PullRequest) api.PullRequest {
-	return api.PullRequest{
+	a := api.PullRequest{
 		PullRequestID:     pr.PullRequestID,
 		PullRequestName:   pr.PullRequestName,
 		AuthorID:          pr.AuthorID,
 		Status:            api.PullRequestStatus(pr.Status),
 		AssignedReviewers: pr.AssignedReviewers,
 	}
+	if pr.MergedAt != nil {
+		a.MergedAt = api.NewOptNilDateTime(*pr.MergedAt)
+	}
+
+	return a
 }
 
 func PullRequestShortToAPI(pr *domain.PullRequestShort) api.PullRequestShort {

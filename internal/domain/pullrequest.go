@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math/rand/v2"
 	"slices"
+	"time"
 )
 
 type PullRequestStatus string
@@ -19,6 +20,7 @@ type PullRequest struct {
 	AuthorID          string
 	Status            PullRequestStatus
 	AssignedReviewers []string
+	MergedAt          *time.Time // nullable
 }
 
 type PullRequestShort struct {
