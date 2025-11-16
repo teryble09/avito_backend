@@ -41,6 +41,11 @@ func (oh *OgenHandler) UsersSetIsActivePost(
 func (oh *OgenHandler) UsersGetReviewGet(ctx context.Context, params api.UsersGetReviewGetParams) (*api.UsersGetReviewGetOK, error) {
 	prs, err := oh.prService.GetReviewerPRs(ctx, params.UserID)
 	if err != nil {
+		oh.logger.ErrorContext(ctx, "user get review",
+			slog.String("user_id", params.UserID),
+			slog.String("error", err.Error()),
+		)
+
 		return nil, ErrInternal
 	}
 
@@ -49,6 +54,10 @@ func (oh *OgenHandler) UsersGetReviewGet(ctx context.Context, params api.UsersGe
 	for i := range len(prs) {
 		prsApi = append(prsApi, PullRequestShortToAPI(prs[i]))
 	}
+
+	oh.logger.InfoContext(ctx, "got reviews",
+		slog.String("user_id", params.UserID),
+	)
 
 	return &api.UsersGetReviewGetOK{
 		UserID:       params.UserID,

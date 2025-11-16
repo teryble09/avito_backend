@@ -33,7 +33,6 @@ func (r *UserRepo) UpsertUsersBatch(ctx context.Context, tx pgx.Tx, team *domain
 
 	teamEntity := entity.TeamFromDomain(team)
 
-	// Добавляем все строки в один запрос
 	for _, user := range team.Members {
 		userEntity := entity.UserFromDomain(user)
 		builder = builder.Values(userEntity.UserID, userEntity.Username, teamEntity.TeamName, userEntity.IsActive)

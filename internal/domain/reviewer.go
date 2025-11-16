@@ -20,10 +20,10 @@ func SelectRandomReviewersExcludingAuthor(candidates []*User, maxCount int, auth
 	return eligible[0:count]
 }
 
-func SelectReplacementReviewer(candidates []*User, authorID, reviewerID string) (string, error) {
+func SelectReplacementReviewer(candidates []*User, reviewersID []string) (string, error) {
 	// фильтруем кандидатов
 	eligible := slices.DeleteFunc(slices.Clone(candidates), func(candidate *User) bool {
-		return candidate.ID == reviewerID || candidate.ID == authorID
+		return slices.Contains(reviewersID, candidate.ID)
 	})
 
 	if len(eligible) == 0 {

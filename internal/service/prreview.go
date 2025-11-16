@@ -74,7 +74,14 @@ func (s *ReviewerService) ReplaceReviewer(
 		return nil, "", domain.ErrPrMerged
 	}
 
-	newReviewerID, err := domain.SelectReplacementReviewer(team.Members, pr.AuthorID, oldReviewerID)
+	reviewers, err := s.reviewerRepo.GetReviewers(ctx, prID)
+	if err != nil {
+		return nil, "", fmt.Errorf("get reviewers: %w", err)
+	}
+
+	exclude := append([]string{pr.AuthorID}, reviewers...)
+
+	newReviewerID, err := domain.SelectReplacementReviewer(team.Members, exclude)
 	if err != nil {
 		return nil, "", fmt.Errorf("select replacement: %w", err)
 	}
@@ -90,11 +97,11 @@ func (s *ReviewerService) ReplaceReviewer(
 		return nil, "", fmt.Errorf("replace reviewer: %w", err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err = tx.Commit(ctx); err != nil {
 		return nil, "", fmt.Errorf("commit: %w", err)
 	}
 
-	reviewers, err := s.reviewerRepo.GetReviewers(ctx, prID)
+	reviewers, err = s.reviewerRepo.GetReviewers(ctx, prID)
 	if err != nil {
 		return nil, "", fmt.Errorf("get reviewers: %w", err)
 	}

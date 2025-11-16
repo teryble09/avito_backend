@@ -59,7 +59,7 @@ func (r *PullRequestRepo) GetPRsByReviewer(ctx context.Context, reviewerID strin
 		InnerJoin("pr_reviewers rev ON rev.pull_request_id = pr.pull_request_id").
 		Where(squirrel.Eq{
 			"rev.reviewer_id": reviewerID,
-			"pr.status":       "OPEN",
+			"pr.status":       string(domain.StatusOpen),
 		}).
 		OrderBy("pr.created_at DESC").
 		ToSql()
@@ -89,7 +89,7 @@ func (r *PullRequestRepo) GetPRsByReviewer(ctx context.Context, reviewerID strin
 func (r *PullRequestRepo) MergePR(ctx context.Context, prID string) (*domain.PullRequest, error) {
 	updateQuery, updateArgs, err := squirrel.Update("pull_requests").
 		PlaceholderFormat(squirrel.Dollar).
-		Set("status", "MERGED").
+		Set("status", string(domain.StatusMerged)).
 		Set("merged_at", squirrel.Expr("COALESCE(merged_at, NOW())")).
 		Where(squirrel.Eq{"pull_request_id": prID}).
 		Suffix("RETURNING pull_request_id, pull_request_name, author_id, status, merged_at").

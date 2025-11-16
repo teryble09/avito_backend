@@ -69,19 +69,9 @@ func (r *PRReviewerRepo) GetReviewers(ctx context.Context, prID string) ([]strin
 	}
 	defer rows.Close()
 
-	reviewers := make([]string, 0)
-
-	for rows.Next() {
-		var reviewerID string
-		if err := rows.Scan(&reviewerID); err != nil {
-			return nil, fmt.Errorf("scan: %w", err)
-		}
-
-		reviewers = append(reviewers, reviewerID)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows error: %w", err)
+	reviewers, err := pgx.CollectRows(rows, pgx.RowTo[string])
+	if err != nil {
+		return nil, fmt.Errorf("collect rows: %w", err)
 	}
 
 	return reviewers, nil
