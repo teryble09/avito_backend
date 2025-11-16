@@ -121,6 +121,53 @@ func PullRequestCreateErrorToAPI(err error) (api.PullRequestCreatePostRes, error
 	}
 }
 
+func PullRequestReassignErrorToAPI(err error) (api.PullRequestReassignPostRes, error) {
+	switch {
+	case errors.Is(err, domain.ErrPrMerged):
+		return &api.PullRequestReassignPostConflict{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodePRMERGED,
+				Message: "cannot reassign on merged PR",
+			},
+		}, nil
+
+	case errors.Is(err, domain.ErrReviewerNotAssigned):
+		return &api.PullRequestReassignPostConflict{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOTASSIGNED,
+				Message: "reviewer is not assigned to this PR",
+			},
+		}, nil
+
+	case errors.Is(err, domain.ErrReviewerNoCandidate):
+		return &api.PullRequestReassignPostConflict{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOCANDIDATE,
+				Message: "no active replacement candidate in team",
+			},
+		}, nil
+
+	case errors.Is(err, domain.ErrUserNotFound):
+		return &api.PullRequestReassignPostNotFound{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOTFOUND,
+				Message: "user not found",
+			},
+		}, nil
+
+	case errors.Is(err, domain.ErrPrNotFound):
+		return &api.PullRequestReassignPostNotFound{
+			Error: api.ErrorResponseError{
+				Code:    api.ErrorResponseErrorCodeNOTFOUND,
+				Message: "pull request not found",
+			},
+		}, nil
+
+	default:
+		return nil, ErrInternal
+	}
+}
+
 func UserToAPI(u *domain.User) api.User {
 	return api.User{
 		UserID:   u.ID,

@@ -19,8 +19,9 @@ func assemblyLayers(db *pgxpool.Pool, logger *slog.Logger) *handler.OgenHandler 
 	teamService := service.NewTeamService(db, teamRepo, userRepo)
 	userService := service.NewUserService(userRepo)
 	prService := service.NewPullRequestService(db, prRepo, prReviewerRepo, userRepo)
+	reviewerService := service.NewReviewerService(db, prReviewerRepo, userRepo, teamRepo, prRepo)
 
-	handler := handler.NewOgenHandler(logger, teamService, userService, prService)
+	handler := handler.NewOgenHandler(logger, teamService, userService, prService, reviewerService)
 
 	return handler
 }

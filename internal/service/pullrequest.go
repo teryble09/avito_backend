@@ -15,7 +15,7 @@ type PullRequestRepo interface {
 	MergePR(ctx context.Context, prID string) (*domain.PullRequest, error)
 }
 
-type PRReviewerRepo interface {
+type PRReviewerRepoForPr interface {
 	AssignReviewers(ctx context.Context, tx pgx.Tx, prID string, reviewerIDs []string) error
 	GetReviewers(ctx context.Context, prID string) ([]string, error)
 }
@@ -28,14 +28,14 @@ type UserRepoForPR interface {
 type PullRequestService struct {
 	db           *pgxpool.Pool
 	prRepo       PullRequestRepo
-	reviewerRepo PRReviewerRepo
+	reviewerRepo PRReviewerRepoForPr
 	userRepo     UserRepoForPR
 }
 
 func NewPullRequestService(
 	db *pgxpool.Pool,
 	prRepo PullRequestRepo,
-	reviewerRepo PRReviewerRepo,
+	reviewerRepo PRReviewerRepoForPr,
 	userRepo UserRepoForPR,
 ) *PullRequestService {
 	return &PullRequestService{

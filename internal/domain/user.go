@@ -1,7 +1,5 @@
 package domain
 
-import "errors"
-
 type User struct {
 	ID       string
 	Username string
@@ -17,5 +15,3 @@ func NewUser(id, username, teamName string, isActive bool) *User {
 		IsActive: isActive,
 	}
 }
-
-var ErrUserNotFound = errors.New("user not found")

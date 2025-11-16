@@ -11,9 +11,10 @@ type OgenHandler struct {
 
 	logger *slog.Logger
 
-	teamService TeamService
-	userService UserService
-	prService   PullRequestService
+	teamService     TeamService
+	userService     UserService
+	prService       PullRequestService
+	reviewerService ReviewerService
 }
 
 func NewOgenHandler(
@@ -21,11 +22,13 @@ func NewOgenHandler(
 	teamService TeamService,
 	userService UserService,
 	prService PullRequestService,
+	reviewerService ReviewerService,
 ) *OgenHandler {
 	return &OgenHandler{
-		logger:      logger,
-		teamService: teamService,
-		userService: userService,
-		prService:   prService,
+		logger:          logger,
+		teamService:     teamService,
+		userService:     userService,
+		prService:       prService,
+		reviewerService: reviewerService,
 	}
 }

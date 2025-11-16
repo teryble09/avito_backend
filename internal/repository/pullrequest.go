@@ -115,3 +115,37 @@ func (r *PullRequestRepo) MergePR(ctx context.Context, prID string) (*domain.Pul
 
 	return prEntity.ToDomain(), nil
 }
+
+func (r *PullRequestRepo) GetPRByID(ctx context.Context, prID string) (*domain.PullRequest, error) {
+	query, args, err := squirrel.Select(
+		"pull_request_id",
+		"pull_request_name",
+		"author_id",
+		"status",
+		"merged_at",
+	).
+		PlaceholderFormat(squirrel.Dollar).
+		From("pull_requests").
+		Where(squirrel.Eq{"pull_request_id": prID}).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build query: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+	defer rows.Close()
+
+	prEntity, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[entity.PullRequest])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrPrNotFound
+		}
+
+		return nil, fmt.Errorf("scan: %w", err)
+	}
+
+	return prEntity.ToDomain(), nil
+}

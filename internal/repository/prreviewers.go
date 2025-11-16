@@ -86,3 +86,50 @@ func (r *PRReviewerRepo) GetReviewers(ctx context.Context, prID string) ([]strin
 
 	return reviewers, nil
 }
+
+func (r *PRReviewerRepo) ReplaceReviewer(ctx context.Context, tx pgx.Tx, prID, oldReviewerID, newReviewerID string) error {
+	deleteQuery, deleteArgs, err := squirrel.Delete("pr_reviewers").
+		PlaceholderFormat(squirrel.Dollar).
+		Where(squirrel.Eq{
+			"pull_request_id": prID,
+			"reviewer_id":     oldReviewerID,
+		}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("build delete query: %w", err)
+	}
+
+	ct, err := tx.Exec(ctx, deleteQuery, deleteArgs...)
+	if err != nil {
+		return fmt.Errorf("delete old reviewer: %w", err)
+	}
+
+	if ct.RowsAffected() == 0 {
+		return domain.ErrReviewerNotAssigned
+	}
+
+	insertQuery, insertArgs, err := squirrel.Insert("pr_reviewers").
+		PlaceholderFormat(squirrel.Dollar).
+		Columns("pull_request_id", "reviewer_id").
+		Values(prID, newReviewerID).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("build insert query: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, insertQuery, insertArgs...)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
+			return domain.ErrPrAlreadyExists
+		}
+
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.ForeignKeyViolation {
+			return domain.ErrUserNotFound
+		}
+
+		return fmt.Errorf("insert new reviewer: %w", err)
+	}
+
+	return nil
+}
