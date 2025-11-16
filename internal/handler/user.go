@@ -37,3 +37,21 @@ func (oh *OgenHandler) UsersSetIsActivePost(
 		User: api.NewOptUser(userApi),
 	}, nil
 }
+
+func (oh *OgenHandler) UsersGetReviewGet(ctx context.Context, params api.UsersGetReviewGetParams) (*api.UsersGetReviewGetOK, error) {
+	prs, err := oh.prService.GetReviewerPRs(ctx, params.UserID)
+	if err != nil {
+		return nil, ErrInternal
+	}
+
+	prsApi := make([]api.PullRequestShort, 0)
+
+	for i := range len(prs) {
+		prsApi = append(prsApi, PullRequestShortToAPI(prs[i]))
+	}
+
+	return &api.UsersGetReviewGetOK{
+		UserID:       params.UserID,
+		PullRequests: prsApi,
+	}, nil
+}

@@ -21,6 +21,13 @@ type PullRequest struct {
 	AssignedReviewers []string
 }
 
+type PullRequestShort struct {
+	PullRequestID   string
+	PullRequestName string
+	AuthorID        string
+	Status          PullRequestStatus
+}
+
 var (
 	ErrPrNotFound      = errors.New("not found")
 	ErrPrAlreadyExists = errors.New("already exists")

@@ -18,6 +18,15 @@ func (e *PullRequest) ToDomain() *domain.PullRequest {
 	}
 }
 
+func (e *PullRequest) ToDomainShort() *domain.PullRequestShort {
+	return &domain.PullRequestShort{
+		PullRequestID:   e.PullRequestID,
+		PullRequestName: e.PullRequestName,
+		AuthorID:        e.AuthorID,
+		Status:          domain.PullRequestStatus(e.Status),
+	}
+}
+
 func PullRequestFromDomain(pr *domain.PullRequest) *PullRequest {
 	return &PullRequest{
 		PullRequestID:   pr.PullRequestID,

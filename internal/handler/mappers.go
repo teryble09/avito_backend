@@ -141,6 +141,15 @@ func PullRequestToAPI(pr *domain.PullRequest) api.PullRequest {
 	}
 }
 
+func PullRequestShortToAPI(pr *domain.PullRequestShort) api.PullRequestShort {
+	return api.PullRequestShort{
+		PullRequestID:   pr.PullRequestID,
+		PullRequestName: pr.PullRequestName,
+		AuthorID:        pr.AuthorID,
+		Status:          api.PullRequestShortStatus(pr.Status),
+	}
+}
+
 func PullRequestCreateFromAPI(pr *api.PullRequestCreatePostReq) *domain.PullRequest {
 	return &domain.PullRequest{
 		PullRequestID:   pr.PullRequestID,

@@ -10,6 +10,7 @@ import (
 
 type PullRequestService interface {
 	CreatePullRequest(ctx context.Context, prCreateReq *domain.PullRequest) (*domain.PullRequest, error)
+	GetReviewerPRs(ctx context.Context, userID string) ([]*domain.PullRequestShort, error)
 }
 
 func (oh *OgenHandler) PullRequestCreatePost(

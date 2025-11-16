@@ -46,3 +46,42 @@ func (r *PullRequestRepo) CreatePR(ctx context.Context, tx pgx.Tx, pr *domain.Pu
 
 	return nil
 }
+
+func (r *PullRequestRepo) GetPRsByReviewer(ctx context.Context, reviewerID string) ([]*domain.PullRequestShort, error) {
+	query, args, err := squirrel.Select(
+		"pr.pull_request_id",
+		"pr.pull_request_name",
+		"pr.author_id",
+		"pr.status",
+	).
+		PlaceholderFormat(squirrel.Dollar).
+		From("pull_requests pr").
+		InnerJoin("pr_reviewers rev ON rev.pull_request_id = pr.pull_request_id").
+		Where(squirrel.Eq{
+			"rev.reviewer_id": reviewerID,
+			"pr.status":       "OPEN",
+		}).
+		OrderBy("pr.created_at DESC").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build query: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+	defer rows.Close()
+
+	prEntities, err := pgx.CollectRows(rows, pgx.RowToStructByName[entity.PullRequest])
+	if err != nil {
+		return nil, fmt.Errorf("collect rows: %w", err)
+	}
+
+	prs := make([]*domain.PullRequestShort, 0, len(prEntities))
+	for _, prEntity := range prEntities {
+		prs = append(prs, prEntity.ToDomainShort())
+	}
+
+	return prs, nil
+}

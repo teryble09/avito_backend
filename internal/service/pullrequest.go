@@ -11,6 +11,7 @@ import (
 
 type PullRequestRepo interface {
 	CreatePR(ctx context.Context, tx pgx.Tx, pr *domain.PullRequest) error
+	GetPRsByReviewer(ctx context.Context, reviewerID string) ([]*domain.PullRequestShort, error)
 }
 
 type PRReviewerRepo interface {
@@ -98,4 +99,13 @@ func (s *PullRequestService) CreatePullRequest(
 	}
 
 	return pr, nil
+}
+
+func (s *PullRequestService) GetReviewerPRs(ctx context.Context, userID string) ([]*domain.PullRequestShort, error) {
+	prs, err := s.prRepo.GetPRsByReviewer(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get reviewer PRs: %w", err)
+	}
+
+	return prs, nil
 }
