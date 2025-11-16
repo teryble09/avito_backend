@@ -71,7 +71,7 @@ func (s *PullRequestService) CreatePullRequest(
 
 	selectedReviewersIds := make([]string, len(selectedReviewers))
 	for i := range len(selectedReviewers) {
-		selectedReviewersIds[i] = selectedReviewers[i].Username
+		selectedReviewersIds[i] = selectedReviewers[i].ID
 	}
 
 	pr = &domain.PullRequest{

@@ -29,6 +29,11 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
 		return nil, fmt.Errorf("db init: %w", err)
 	}
 
+	err = db.Ping(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("db ping: %w", err)
+	}
+
 	goose.SetBaseFS(migrations.FS)
 
 	if err := goose.SetDialect("postgres"); err != nil {
