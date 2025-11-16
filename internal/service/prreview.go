@@ -14,12 +14,10 @@ type PRReviewerRepo interface {
 	GetReviewers(ctx context.Context, prID string) ([]string, error)
 }
 
+//nolint:iface //может изменится в будущем, повторение не страшно
 type UserRepoForReviewer interface {
 	GetUserByID(ctx context.Context, userID string) (*domain.User, error)
-}
-
-type TeamRepoForReviewer interface {
-	GetTeamByName(ctx context.Context, teamName string) (*domain.Team, error)
+	GetActiveTeamMembers(ctx context.Context, teamName string) ([]*domain.User, error)
 }
 
 type PullRequestRepoForReviewer interface {
@@ -30,7 +28,6 @@ type ReviewerService struct {
 	db           *pgxpool.Pool
 	reviewerRepo PRReviewerRepo
 	userRepo     UserRepoForReviewer
-	teamRepo     TeamRepoForReviewer
 	prRepo       PullRequestRepoForReviewer
 }
 
@@ -38,14 +35,12 @@ func NewReviewerService(
 	db *pgxpool.Pool,
 	reviewerRepo PRReviewerRepo,
 	userRepo UserRepoForReviewer,
-	teamRepo TeamRepoForReviewer,
 	prRepo PullRequestRepoForReviewer,
 ) *ReviewerService {
 	return &ReviewerService{
 		db:           db,
 		reviewerRepo: reviewerRepo,
 		userRepo:     userRepo,
-		teamRepo:     teamRepo,
 		prRepo:       prRepo,
 	}
 }
@@ -60,7 +55,7 @@ func (s *ReviewerService) ReplaceReviewer(
 		return nil, "", fmt.Errorf("get author: %w", err)
 	}
 
-	team, err := s.teamRepo.GetTeamByName(ctx, user.TeamName)
+	activeMembers, err := s.userRepo.GetActiveTeamMembers(ctx, user.TeamName)
 	if err != nil {
 		return nil, "", fmt.Errorf("get team: %w", err)
 	}
@@ -81,7 +76,7 @@ func (s *ReviewerService) ReplaceReviewer(
 
 	exclude := append([]string{pr.AuthorID}, reviewers...)
 
-	newReviewerID, err := domain.SelectReplacementReviewer(team.Members, exclude)
+	newReviewerID, err := domain.SelectReplacementReviewer(activeMembers, exclude)
 	if err != nil {
 		return nil, "", fmt.Errorf("select replacement: %w", err)
 	}

@@ -20,6 +20,7 @@ type PRReviewerRepoForPr interface {
 	GetReviewers(ctx context.Context, prID string) ([]string, error)
 }
 
+//nolint:iface //может изменится в будущем, повторение не страшно
 type UserRepoForPR interface {
 	GetUserByID(ctx context.Context, userID string) (*domain.User, error)
 	GetActiveTeamMembers(ctx context.Context, teamName string) ([]*domain.User, error)
