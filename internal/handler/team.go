@@ -24,7 +24,7 @@ func (oh *OgenHandler) TeamAddPost(ctx context.Context, req *api.Team) (api.Team
 			slog.String("error", err.Error()),
 		)
 
-		return ErrorToAPI(err), nil
+		return ErrorToAPI(err)
 	}
 
 	oh.logger.InfoContext(ctx, "create team",
@@ -46,7 +46,7 @@ func (oh *OgenHandler) TeamGetGet(ctx context.Context, params api.TeamGetGetPara
 			slog.String("error", err.Error()),
 		)
 
-		return ErrorToAPI(err), nil
+		return ErrorToAPI(err)
 	}
 
 	oh.logger.InfoContext(ctx, "get team",

@@ -13,11 +13,14 @@ import (
 func assemblyLayers(db *pgxpool.Pool, logger *slog.Logger) *handler.OgenHandler {
 	teamRepo := repository.NewTeamRepo(db)
 	userRepo := repository.NewUserRepo(db)
+	prRepo := repository.NewPullRequestRepo(db)
+	prReviewerRepo := repository.NewPRReviewerRepo(db)
 
 	teamService := service.NewTeamService(db, teamRepo, userRepo)
 	userService := service.NewUserService(userRepo)
+	prService := service.NewPullRequestService(db, prRepo, prReviewerRepo, userRepo)
 
-	handler := handler.NewOgenHandler(logger, teamService, userService)
+	handler := handler.NewOgenHandler(logger, teamService, userService, prService)
 
 	return handler
 }

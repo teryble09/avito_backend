@@ -24,7 +24,7 @@ func (oh *OgenHandler) UsersSetIsActivePost(
 			slog.String("error", err.Error()),
 		)
 
-		return ErrorToAPI(err), nil
+		return ErrorToAPI(err)
 	}
 
 	oh.logger.InfoContext(ctx, "set is_active",

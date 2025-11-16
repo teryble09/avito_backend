@@ -89,3 +89,61 @@ func (r *UserRepo) SetIsActive(ctx context.Context, userID string, isActive bool
 
 	return userDomain, nil
 }
+
+func (r *UserRepo) GetUserByID(ctx context.Context, userID string) (*domain.User, error) {
+	query := `
+		SELECT user_id, username, team_name, is_active
+		FROM users
+		WHERE user_id = $1
+	`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+	defer rows.Close()
+
+	userEntity, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[entity.User])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrUserNotFound
+		}
+
+		return nil, fmt.Errorf("scan user: %w", err)
+	}
+
+	return userEntity.ToDomain(), nil
+}
+
+func (r *UserRepo) GetActiveTeamMembers(ctx context.Context, teamName string) ([]*domain.User, error) {
+	builder := squirrel.Select("user_id", "username", "team_name", "is_active").
+		PlaceholderFormat(squirrel.Dollar).
+		From("users").
+		Where(squirrel.Eq{
+			"team_name": teamName,
+			"is_active": true,
+		})
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build query: %w", err)
+	}
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("run query: %w", err)
+	}
+	defer rows.Close()
+
+	userEntities, err := pgx.CollectRows(rows, pgx.RowToStructByName[entity.User])
+	if err != nil {
+		return nil, fmt.Errorf("collect rows: %w", err)
+	}
+
+	users := make([]*domain.User, 0, len(userEntities))
+	for _, ue := range userEntities {
+		users = append(users, ue.ToDomain())
+	}
+
+	return users, nil
+}

@@ -13,16 +13,19 @@ type OgenHandler struct {
 
 	teamService TeamService
 	userService UserService
+	prService   PullRequestService
 }
 
 func NewOgenHandler(
 	logger *slog.Logger,
 	teamService TeamService,
 	userService UserService,
+	prService PullRequestService,
 ) *OgenHandler {
 	return &OgenHandler{
 		logger:      logger,
 		teamService: teamService,
 		userService: userService,
+		prService:   prService,
 	}
 }
