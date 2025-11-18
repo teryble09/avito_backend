@@ -53,6 +53,7 @@ func (r *PullRequestRepo) GetPRsByReviewer(ctx context.Context, reviewerID strin
 		"pr.pull_request_name",
 		"pr.author_id",
 		"pr.status",
+		"pr.merged_at",
 	).
 		PlaceholderFormat(squirrel.Dollar).
 		From("pull_requests pr").
