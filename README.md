@@ -2,7 +2,7 @@
 
 Штош, на тесты не хватило времени (стыдно)
 
-Запуск на docker compose up, порт можно поменять в docker compose, стандартно 8080
+Запуск на docker compose up, порт можно поменять в docker compose, стандартно 8080. Переменные окружения в docker-compose.yml, но как пример добавил .envexample
 
 5432 открыт для dbeaver/pgadmin (dbname:test, user:test, password:test)
 
